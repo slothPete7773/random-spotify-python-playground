@@ -1,2 +1,5 @@
 # Credential and configurations
 env.conf
+
+# Cache
+**/__pycache__
