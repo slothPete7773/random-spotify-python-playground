@@ -9,6 +9,7 @@ packages = [{include = "random_spotify_python_playground"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 spotipy = "^2.23.0"
+flask = "^2.3.2"
 fastapi = "^0.98.0"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
 
