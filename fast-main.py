@@ -14,11 +14,11 @@ from fastapi import FastAPI, Path, Request, HTTPException
 from fastapi.responses import RedirectResponse
 app = FastAPI()
 
-CLIENT_ID="cbe1c38fa78c4420be783075886f43a3"
-CLIENT_SECRET="f5b0ee9fce764f66b22fcc03e1a0ff9e"
+CLIENT_ID=config.get('spotify_credential', 'CLIENT_ID')
+CLIENT_SECRET=config.get('spotify_credential', 'CLIENT_SECRET')
 REDIRECT_URI="http://localhost:8000/authorization"
 # A list of space-separated scopes
-SCOPE = "user-top-read" 
+SCOPE = "user-read-playback-state" 
 
 # Route methods
 @app.get("/")
