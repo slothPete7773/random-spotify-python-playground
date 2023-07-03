@@ -3,3 +3,4 @@ env.conf
 
 # Cache
 **/__pycache__
+**/.cache
