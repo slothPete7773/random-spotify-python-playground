@@ -1,4 +1,4 @@
-# [TITLE]
+# [Spotify-Spotipy Saving Data]
 
 This repository is an experimental project for collecting data from Spotify, into another database for further usage. 
 
@@ -16,6 +16,6 @@ The data that got pulled are as the following:
  3. TODO: Manage to fetch data
  4. TODO: Transform the data and save to file
  5. TODO: Store the data, maybe on cloud
- 6. TODO: Automate the flow, maybe Airflow
+ 6. TODO: Get the genre data for each track, use Genre from Artist data
  7. PLAN: Think about what to analyse, compare, and visualize from the historical top tracks/artists data.
  
