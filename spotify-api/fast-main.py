@@ -128,7 +128,19 @@ async def _tracks(tracks: Tracks):
     result = sp.tracks(tracks.ids)
     return result
 
+class Albums(BaseModel):
+    ids: list[str]
 
+EXAMPLE_IDS = ["29vqF5DQuNIzcYM0tept6C", "20hW2P3VSNJ1A7MwjIJ0Up"]
+@app.post("/spotify-api/v1/albums")
+async def _albums(albums: Albums):
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
+    
+    sp = spotipy.Spotify(auth=token)
+    result = sp.albums(albums.ids)
+    return result
 
 
 # Under development
