@@ -114,6 +114,21 @@ async def _artists(artists: Artists):
     return result
 
 # TODO: GET Track
+class Tracks(BaseModel):
+    ids: list[str]
+
+# EXAMPLE_IDS = ["5nDIBUarJMA7qlpuiryATA", "1enL3bmUAoP3sE1jp7NGP5"]
+@app.post("/spotify-api/v1/tracks")
+async def _tracks(tracks: Tracks):
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
+    
+    sp = spotipy.Spotify(auth=token)
+    result = sp.tracks(tracks.ids)
+    return result
+
+
 
 
 # Under development
