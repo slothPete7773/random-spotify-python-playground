@@ -1,7 +1,0 @@
-# Credential and configurations
-env.conf
-
-# Cache
-**/__pycache__
-**/.cache
-**/poetry.lock
