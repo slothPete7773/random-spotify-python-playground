@@ -1,15 +1,16 @@
 import json
 import time
+from datetime import datetime
 import configparser
 config = configparser.ConfigParser()
 config.read("env.conf")
 # value_a = config.get("test", "a")
 
 import spotipy
-from pydantic import BaseModel, Field, EmailStr
 from spotipy.oauth2 import SpotifyOAuth
 
 from typing import Annotated
+from pydantic import BaseModel
 from fastapi import FastAPI, Path, Request, HTTPException
 from fastapi.responses import RedirectResponse
 app = FastAPI()
@@ -18,15 +19,13 @@ CLIENT_ID=config.get('spotify_credential', 'CLIENT_ID')
 CLIENT_SECRET=config.get('spotify_credential', 'CLIENT_SECRET')
 REDIRECT_URI="http://localhost:8000/authorization"
 # A list of space-separated scopes
-SCOPE = "user-read-playback-state" 
+SCOPE = "user-read-playback-state"
 
 # Route methods
 @app.get("/")
 async def _root(token: str=None):
     _token, is_token_valid = get_access_token()
     _expires_at, is_expires_valid = get_expires_at()
-    # print(is_valid)
-    # print(_token)
     return {
         "greet": "Hello World",
         "page": "/",
@@ -39,6 +38,7 @@ async def _root(token: str=None):
 async def _login() -> RedirectResponse:
     sp_oauth = create_spotify_oauth()
     auth_url = sp_oauth.get_authorize_url()
+    print(f"Authen URL: [{auth_url}]")
     return RedirectResponse(url=auth_url)
     
 @app.get("/authorization")
@@ -98,9 +98,42 @@ async def _top(type: str, time_range: int = 'medium_term', limit: int = 20, offs
     
     return result
 
+# TODO: GET Artist
+class Artists(BaseModel):
+    ids: list[str]
 
-        
+# EXAMPLE_IDS = ["4YPiq62lEVjRdzhSlNto08", "4YLUMAgNyttwx4hUHgtBtR"]
+@app.post("/spotify-api/v1/artists")
+async def _artists(artists: Artists):
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
+    
+    sp = spotipy.Spotify(auth=token)
+    result = sp.artists(artists.ids)
+    return result
 
+# TODO: GET Track
+
+
+# Under development
+# TODO: Future: Get Playback
+# @app.get("/spotify-api/dev/me/current_playback")
+# async def _current_playback():
+#     """
+#     Note: The result
+#     """
+#     print("Hello")
+#     token, is_authorized = get_access_token()
+#     if not(is_authorized):
+#         return RedirectResponse(url="/")
+    
+#     print(f"token: {token}\nis_autorized: {is_authorized}")
+#     sp = spotipy.Spotify(auth=token)
+#     result = sp.current_playback()
+    
+#     return result
+    
 
 # Utility functions
 def create_spotify_oauth():
@@ -110,7 +143,6 @@ def create_spotify_oauth():
         redirect_uri=REDIRECT_URI,
         scope=SCOPE 
     )
-
 
 def get_access_token() -> tuple[str, bool]:
     token, is_token_valid = get_token_info()
@@ -160,6 +192,4 @@ def get_token_info() -> tuple[dict, bool]:
         "refresh_token": refresh_token,
     }
     is_token_valid = True
-    print(f"token_info: {token_info}")
     return output, is_token_valid
-
