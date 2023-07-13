@@ -1,17 +1,14 @@
-import json
 import time
-from datetime import datetime
 import configparser
 config = configparser.ConfigParser()
 config.read("env.conf")
-# value_a = config.get("test", "a")
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 from typing import Annotated
 from pydantic import BaseModel
-from fastapi import FastAPI, Path, Request, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 app = FastAPI()
 
@@ -32,7 +29,6 @@ async def _root(token: str=None):
         "access_token": _token if is_token_valid else "Empty",
         "expires_at": _expires_at if is_expires_valid else "Empty",
         }
-
 
 @app.get("/login")
 async def _login() -> RedirectResponse:
@@ -58,7 +54,6 @@ async def _authorization(code: str=None):
         config.write(config_file)
     
     return RedirectResponse(url=f"/?token={token_info}")
-    return RedirectResponse(url=f"/")
 
 @app.get("/spotify-api/v1/me")
 async def _me():
@@ -98,7 +93,6 @@ async def _top(type: str, time_range: int = 'medium_term', limit: int = 20, offs
     
     return result
 
-# TODO: GET Artist
 class Artists(BaseModel):
     ids: list[str]
 
@@ -113,7 +107,6 @@ async def _artists(artists: Artists):
     result = sp.artists(artists.ids)
     return result
 
-# TODO: GET Track
 class Tracks(BaseModel):
     ids: list[str]
 
@@ -131,7 +124,7 @@ async def _tracks(tracks: Tracks):
 class Albums(BaseModel):
     ids: list[str]
 
-EXAMPLE_IDS = ["29vqF5DQuNIzcYM0tept6C", "20hW2P3VSNJ1A7MwjIJ0Up"]
+# EXAMPLE_IDS = ["29vqF5DQuNIzcYM0tept6C", "20hW2P3VSNJ1A7MwjIJ0Up"]
 @app.post("/spotify-api/v1/albums")
 async def _albums(albums: Albums):
     token, is_authorized = get_access_token()
@@ -142,7 +135,6 @@ async def _albums(albums: Albums):
     result = sp.albums(albums.ids)
     return result
 
-# TODO: Genre by Album IDs
 @app.post("/spotify-api/v1/albums/genres")
 async def _albums_genre(albums: Albums):
     token, is_authorized = get_access_token()
@@ -164,7 +156,6 @@ async def _albums_genre(albums: Albums):
         "albums_genre": albums_genre
     }
 
-# TODO: Genre by Artist IDs
 @app.post("/spotify-api/v1/artists/genres")
 async def _artists_genre(artists: Artists):
     token, is_authorized = get_access_token()
@@ -186,23 +177,19 @@ async def _artists_genre(artists: Artists):
         "artists_genre": artists_genre
     }
 
-# Under development
-# TODO: Future: Get Playback
-# @app.get("/spotify-api/dev/me/current_playback")
-# async def _current_playback():
-#     """
-#     Note: The result
-#     """
-#     print("Hello")
-#     token, is_authorized = get_access_token()
-#     if not(is_authorized):
-#         return RedirectResponse(url="/")
+@app.get("/spotify-api/v1/me/current_playback")
+async def _current_playback():
+    """
+    Note: The result
+    """
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
     
-#     print(f"token: {token}\nis_autorized: {is_authorized}")
-#     sp = spotipy.Spotify(auth=token)
-#     result = sp.current_playback()
+    sp = spotipy.Spotify(auth=token)
+    current_playback = sp.current_playback()
     
-#     return result
+    return current_playback
     
 
 # Utility functions
@@ -246,11 +233,11 @@ def get_token_info() -> tuple[dict, bool]:
         config.set("token_info", "expires_at", str(token_info['expires_at']))
         config.set("token_info", "refresh_token", token_info['refresh_token'])
 
-    access_token = config.get("token_info", "access_token")
+    scope = config.get("token_info", "scope")
     token_type = config.get("token_info", "token_type")
     expires_in = config.get("token_info", "expires_in")
-    scope = config.get("token_info", "scope")
     expires_at = config.get("token_info", "expires_at")
+    access_token = config.get("token_info", "access_token")
     refresh_token = config.get("token_info", "refresh_token")
 
     output = {
