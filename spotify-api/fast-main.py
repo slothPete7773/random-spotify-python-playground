@@ -66,10 +66,10 @@ async def _me():
     return result
 
 @app.get("/spotify-api/v1/me/top/{type}")
-async def _top(type: str, time_range: int = 'medium_term', limit: int = 20, offset: int = 0):
+async def _top(top_type: str, time_range: int = 'medium_term', limit: int = 20, offset: int = 0):
     time_ranges = ['short_term', 'medium_term', 'long_term']
     valid_types = ['artists', 'tracks']
-    if not (type in valid_types):
+    if not (top_type in valid_types):
         raise HTTPException(status_code=404, detail='Invalid path parameter')
 
     if not (time_range in time_ranges):
