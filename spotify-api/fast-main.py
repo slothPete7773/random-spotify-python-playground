@@ -142,6 +142,49 @@ async def _albums(albums: Albums):
     result = sp.albums(albums.ids)
     return result
 
+# TODO: Genre by Album IDs
+@app.post("/spotify-api/v1/albums/genres")
+async def _albums_genre(albums: Albums):
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
+    
+    sp = spotipy.Spotify(auth=token)
+    fetched_albums = sp.albums(albums.ids)
+    albums_genre = []
+    for album in fetched_albums['albums']:
+        _temp = {
+            "album_id" : album['id'],
+            "album_name" : album['name'],
+            "album_genre" : album['genres'] if len(album['genres']) > 0 else None
+            }
+        albums_genre.append(_temp)
+    
+    return {
+        "albums_genre": albums_genre
+    }
+
+# TODO: Genre by Artist IDs
+@app.post("/spotify-api/v1/artists/genres")
+async def _artists_genre(artists: Artists):
+    token, is_authorized = get_access_token()
+    if not(is_authorized):
+        return RedirectResponse(url="/")
+    
+    sp = spotipy.Spotify(auth=token)
+    fetched_artists = sp.artists(artists.ids)
+    artists_genre = []
+    for artist in fetched_artists['artists']:
+        _temp = {
+            "artist_id": artist['id'],
+            "artist_name": artist['name'],
+            "artist_genres": artist['genres']
+        }
+        artists_genre.append(_temp)
+    
+    return {
+        "artists_genre": artists_genre
+    }
 
 # Under development
 # TODO: Future: Get Playback

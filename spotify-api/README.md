@@ -30,7 +30,7 @@ View interactive API doc at [http://localhost:8000/docs](http://localhost:8000/d
 
 - DONE: POST /spotify-api/v1/tracks
 
-- TODO: POST /spotify-api/v1/albums
+- DONE: POST /spotify-api/v1/albums
 
 - TODO: GET /spotify-api/v1/album/genre
 
