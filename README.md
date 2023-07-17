@@ -13,8 +13,11 @@ The data that got pulled are as the following:
     - store token in session (somehow)
     - refresh access token
  2. DONE: Function calling to Spotify API service
- 3. TODO: Manage to fetch data
+ 3. DONE: Manage to fetch data
  4. TODO: Transform the data and save to file
+       
+       - I will save the raw files first, and think about normalization later when needed to store in the relational db
+
  5. TODO: Store the data, maybe on cloud
  6. TODO: Get the genre data for each track, use Genre from Artist data
  7. PLAN: Think about what to analyse, compare, and visualize from the historical top tracks/artists data.

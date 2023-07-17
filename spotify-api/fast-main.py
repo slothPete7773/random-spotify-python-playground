@@ -16,7 +16,7 @@ CLIENT_ID=config.get('spotify_credential', 'CLIENT_ID')
 CLIENT_SECRET=config.get('spotify_credential', 'CLIENT_SECRET')
 REDIRECT_URI="http://localhost:8000/authorization"
 # A list of space-separated scopes
-SCOPE = "user-read-playback-state"
+SCOPE=config.get('spotify_scopes', 'scopes')
 
 # Route methods
 @app.get("/")
