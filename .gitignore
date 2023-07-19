@@ -1,7 +1,15 @@
 # Credential and configurations
 env.conf
+**/service_accounts/*.json
 
 # Cache
 **/__pycache__
 **/.cache
 **/poetry.lock
+
+# Directories
+**/logs/
+**/data/
+**/plugins/
+**/tests/
+**/dbt/
