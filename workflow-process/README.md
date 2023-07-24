@@ -17,3 +17,10 @@ Spining up Airflow service.
 # /workflow-process/.
 $ docker compose up
 ```
+
+## Plan
+
+### TODO
+
+- Fetch top tracks monthly to GCS
+- Fetch top artists monthly to GCS

@@ -20,5 +20,7 @@ The data that got pulled are as the following:
 
  5. TODO: Store the data, maybe on cloud
  6. TODO: Get the genre data for each track, use Genre from Artist data
- 7. PLAN: Think about what to analyse, compare, and visualize from the historical top tracks/artists data.
+ 7. TODO: Transform JSON to tabular format. 
+ 8. TODO: Design schema for storing the historical top tracks/artists with their corresponding details (Genre, etc)
+ 9. TODO: Get not-quite near-real-time of Current_playback state, maybe run every 3 minutes?, so that I can record the history more accurate.
  
