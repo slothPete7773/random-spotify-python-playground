@@ -1,7 +1,9 @@
-import configparser
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils import timezone 
+import json
+import requests
+import configparser
 
 DAGS_FOLDER = "/opt/airflow/dags"
 DATA_FOLDER = "/opt/airflow/data"
@@ -17,12 +19,25 @@ PROJECT_ID = "slothpete7773-warehouse"
 GCS_BUCKET = "slothpete-spotify-side-project-playground"
 KEYFILE = config.get('google_service', 'gcs_service_account')
 
+BASE_URL = "http://spotify-api:8000/spotify-api/v1"
+ENDPOINT = "/me/top/tracks" # /tracks OR /artists
+
 def _extract_data_from_server():
     # TODO: fetch data
     # TODO: save raw data as-is to file
-    pass
-    # print(f"KEYFILE: {KEYFILE}")
-    # return 0
+    
+    fetched_result = requests.get(f"{BASE_URL}{ENDPOINT}", timeout=10)
+    # try: 
+    # except requests.exceptions.RequestException as e:
+    #     raise SystemExit(e)
+
+    json_result = json.loads(fetched_result.text)
+
+    filename = 'data.json'
+    print("AAA")
+    with open(f"{DATA_FOLDER}/{filename}", 'w', encoding='utf-8') as file:
+        print("BBB")
+        json.dump(json_result, file)
 
 def _upload_data_to_gcs():
     # TODO: read the json file
