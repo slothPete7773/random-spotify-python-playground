@@ -13,6 +13,7 @@ The data that got pulled are as the following:
     - store token in session (somehow)
     - refresh access token
  2. DONE: Function calling to Spotify API service
+ 2. DONE: Learn Docker-compose more
  3. DONE: Manage to fetch data
  4. TODO: Transform the data and save to file
        

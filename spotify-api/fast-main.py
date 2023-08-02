@@ -65,7 +65,7 @@ async def _me():
     result = sp.current_user()
     return result
 
-@app.get("/spotify-api/v1/me/top/{type}")
+@app.get("/spotify-api/v1/me/top/{top_type}")
 async def _top(top_type: str, time_range: int = 'medium_term', limit: int = 20, offset: int = 0):
     time_ranges = ['short_term', 'medium_term', 'long_term']
     valid_types = ['artists', 'tracks']
@@ -86,7 +86,7 @@ async def _top(top_type: str, time_range: int = 'medium_term', limit: int = 20, 
         return RedirectResponse(url="/")
     
     sp = spotipy.Spotify(auth=token)
-    if (type == 'artists'):
+    if (top_type == 'artists'):
         result = sp.current_user_top_artists(limit=limit, offset=offset, time_range=time_range)
     else:
         result = sp.current_user_top_tracks(limit=limit, offset=offset, time_range=time_range)
