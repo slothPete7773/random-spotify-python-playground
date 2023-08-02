@@ -13,3 +13,4 @@ env.conf
 **/plugins/
 **/tests/
 **/dbt/
+**/test/
