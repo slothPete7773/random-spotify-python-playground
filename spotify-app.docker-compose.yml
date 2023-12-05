@@ -2,7 +2,7 @@ version: "3.8"
 services:
   spotify-api:
     build:
-      context: "D:/programming/random-spotify-python-playground/spotify-api"
+      context: ./spotify-api
     networks: 
       - spotify-net
     ports:
