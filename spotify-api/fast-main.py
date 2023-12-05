@@ -12,11 +12,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 app = FastAPI()
 
-CLIENT_ID=config.get('spotify_credential', 'CLIENT_ID')
-CLIENT_SECRET=config.get('spotify_credential', 'CLIENT_SECRET')
-REDIRECT_URI="http://localhost:8000/authorization"
+CLIENT_ID=config.get('spotify_credential', 'client_id')
+CLIENT_SECRET=config.get('spotify_credential', 'client_secret')
+REDIRECT_URI=config.get('spotify_credential', 'redirect_uri')
 # A list of space-separated scopes
-SCOPE=config.get('spotify_scopes', 'scopes')
+SCOPE=config.get('spotify_credential', 'scopes')
 
 # Route methods
 @app.get("/")
@@ -28,6 +28,12 @@ async def _root(token: str=None):
         "page": "/",
         "access_token": _token if is_token_valid else "Empty",
         "expires_at": _expires_at if is_expires_valid else "Empty",
+        "spotify_credentials": {
+            "CLIENT_ID": CLIENT_ID,
+            "CLIENT_SECRET": CLIENT_SECRET,
+            "REDIRECT_URI": REDIRECT_URI,
+            "SCOPE": SCOPE
+        }
         }
 
 @app.get("/login")
@@ -70,7 +76,7 @@ async def _top(top_type: str, time_range: int = 'medium_term', limit: int = 20, 
     time_ranges = ['short_term', 'medium_term', 'long_term']
     valid_types = ['artists', 'tracks']
     if not (top_type in valid_types):
-        raise HTTPException(status_code=404, detail='Invalid path parameter')
+        raise HTTPException(status_code=400, detail='Invalid path parameter')
 
     if not (time_range in time_ranges):
         raise HTTPException(status_code=400, detail='Invalid provided time_range.')
@@ -177,8 +183,8 @@ async def _artists_genre(artists: Artists):
         "artists_genre": artists_genre
     }
 
-@app.get("/spotify-api/v1/me/current_playback")
-async def _current_playback():
+@app.get("/spotify-api/v1/me/currently_playing")
+async def _currently_playing():
     """
     Note: The result
     """
@@ -187,7 +193,7 @@ async def _current_playback():
         return RedirectResponse(url="/")
     
     sp = spotipy.Spotify(auth=token)
-    current_playback = sp.current_playback()
+    current_playback = sp.currently_playing()
     
     return current_playback
     
@@ -198,16 +204,22 @@ def create_spotify_oauth():
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         redirect_uri=REDIRECT_URI,
-        scope=SCOPE 
+        scope=SCOPE
     )
 
 def get_access_token() -> tuple[str, bool]:
     token, is_token_valid = get_token_info()
-    return token['access_token'], is_token_valid
+    if is_token_valid:
+        return token['access_token'], is_token_valid
+    else:
+        return "", is_token_valid
 
 def get_expires_at() -> tuple[int, bool]:
     token, is_token_valid = get_token_info()
-    return token['expires_at'], is_token_valid
+    if is_token_valid:
+        return token['expires_at'], is_token_valid
+    else:
+        return "", is_token_valid
 
 def get_token_info() -> tuple[dict, bool]:
     sp_oauth = create_spotify_oauth()
@@ -233,20 +245,14 @@ def get_token_info() -> tuple[dict, bool]:
         config.set("token_info", "expires_at", str(token_info['expires_at']))
         config.set("token_info", "refresh_token", token_info['refresh_token'])
 
-    scope = config.get("token_info", "scope")
-    token_type = config.get("token_info", "token_type")
-    expires_in = config.get("token_info", "expires_in")
-    expires_at = config.get("token_info", "expires_at")
-    access_token = config.get("token_info", "access_token")
-    refresh_token = config.get("token_info", "refresh_token")
 
     output = {
-        "access_token": access_token,
-        "token_type": token_type,
-        "expires_in": expires_in,
-        "scope": scope,
-        "expires_at": expires_at,
-        "refresh_token": refresh_token,
+        "access_token": config.get("token_info", "access_token"),
+        "token_type": config.get("token_info", "token_type"),
+        "expires_in": config.get("token_info", "expires_in"),
+        "expires_at": config.get("token_info", "expires_at"),
+        "refresh_token": config.get("token_info", "refresh_token"),
+        "scope": config.get("token_info", "scope"),
     }
     is_token_valid = True
     return output, is_token_valid
