@@ -2,7 +2,7 @@ version: "3.8"
 services:
   spotify-api:
     build:
-      context: ./spotify-api
+      context: .
     networks: 
       - spotify-net
     ports:
