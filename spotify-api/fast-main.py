@@ -32,21 +32,46 @@ async def _login() -> RedirectResponse:
     
 @app.get("/authorization")
 async def _authorization(code: str=None):
+    # try:
     if code is not None:
         access_token = spotify_auth.get_access_token(code)
+        return RedirectResponse(url=f"/?token={access_token}")
+    else: RedirectResponse(url=f"/")
 
-    return RedirectResponse(url=f"/?token={access_token}")
+    # except Exception: 
+    #     return RedirectResponse(url=f"/")
 
-# @app.get("/spotify-api/v1/me")
-# async def _me():
-#     # token, is_authorized = get_access_token()
-#     # if not(is_authorized):
-#     #     return RedirectResponse(url="/")
-#     spotify_instance = spotify_auth.get_spotify_instance()
+@app.get("/refresh-token")
+async def _refresh_token():
+    try: 
+        renew_token: dict = spotify_auth.refresh_access_token()
+        # return RedirectResponse(url=f"/?renew_access_token={}")
+        return {
+            "status": 200,
+            "response": renew_token
+        }
+    except Exception as e:
+        return {
+            "status": 500,
+            "error": e,
+        }
+    
 
-#     sp = get_spotify_instance(token)
-#     result = sp.current_user()
-#     return result
+@app.get("/spotify-api/v1/me")
+async def _me():
+    # token, is_authorized = get_access_token()
+    # if not(is_authorized):
+    #     return RedirectResponse(url="/")
+    # spotify_instance = spotify_auth.get_spotify_instance()
+    spotify_res = spotify_auth.get_spotify_instance()
+    if spotify_res['status'] == 500:
+        return spotify_res
+    # print(type(spotify_res['instance']))
+    me = spotify_res['instance'].current_user()
+
+    # sp = get_spotify_instance(token)
+    # result = sp.current_user()
+    return me
 
 # @app.get("/spotify-api/v1/me/top/{top_type}")
 # async def _top(top_type: str, time_range: int = 'medium_term', limit: int = 20, offset: int = 0):
