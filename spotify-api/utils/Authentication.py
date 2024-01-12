@@ -1,12 +1,16 @@
+# from pathlib import Path
+import urllib3 
 from typing import Dict, Type, Optional
 from dataclasses import dataclass
 import base64
 import datetime
 import requests
+
 import spotipy
-# from spotipy
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
+# from spotipy.exceptions import 
+
 
 import configparser
 config = configparser.ConfigParser()
@@ -44,6 +48,8 @@ class Authenticator():
         self.config_file = config_file
 
         self.OAUTH_ACCESS_TOKEN_URL = "https://accounts.spotify.com/api/token"
+        self.API_v1_URL = "https://api.spotify.com/v1"
+
     def print_something(self):
         # print("state:", self.state)
         # print(f"type oauth: {type(self.oauth_instance)}")
@@ -65,67 +71,63 @@ class Authenticator():
                 scope=self.scope
             )
             self.oauth_instance = _oauth_instance
-        # auth_url = _oauth_instance.get_authorize_url()
-        # print(f"Authorization URL: {auth_url}")
         return self.oauth_instance
 
     def get_spotify_instance(self) -> SpotifyInstance:
-        if self.spotify_instance is not spotipy.Spotify:
+        if self.spotify_instance is spotipy.Spotify:
+            return SpotifyInstance(200, self.spotify_instance)
+        # {
+        #         "status": 200,
+        #         "instance": self.spotify_instance
+        #     }
 
+        try:
             self.spotify_instance = spotipy.Spotify(oauth_manager=self.oauth_instance)
-            # self.oauth_instance.get_access_token()
-            me = self.spotify_instance.current_user()
-            print(me)
-            return {
-                "status": 200,
-                "instance": self.spotify_instance,
-            }
-        else:
-            return {
-                "status": 500,
-                "description": "Internal error, cannot instantiate Spotify Instance"
-            }
+        except spotipy.SpotifyOauthError("Failed to instantiate Spotify instance") as e:
+            raise e
+        return SpotifyInstance(200, self.spotify_instance)
+    # {
+    #         "status": 200,
+    #         "instance": self.spotify_instance,
+    #     }
     
     def get_access_token(self, code: str = None) -> str: 
         is_authorize: str = self.config.get("token_info", "authorize?")
-        if (is_authorize.lower() == "true"):
+        prev_scope = set(self.config.get("token_info", "scope").split(" "))
+        curr_scope = set(self.scope.split(" "))
+        if ((is_authorize.lower() == "true") and (curr_scope == prev_scope)):
             print("already true, give access_token")
             return self.config.get("token_info", "access_token")
-        else:
-            if code is None:
-                raise PermissionError("Not yet authorized and no authorize code provided.")
-            
-            # try:
-            CLIENT_KEY_B64: str = self.get_client_key_base64() # base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
-            headers: dict = {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": "Basic {}".format(CLIENT_KEY_B64)
-            }
-            payload: dict = {
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": self.redirect_uri,
-            }
-            OAUTH_ACCESS_TOKEN_URL: str = self.OAUTH_ACCESS_TOKEN_URL
-            r = requests.post(OAUTH_ACCESS_TOKEN_URL, headers=headers, data=payload)
-            token_info = r.json()
-            print(f"Token Info: \n{token_info}")
-                # token_info = self.oauth_instance.get_access_token(code)
-            # except Exception as e:
-            #     raise e
-            
-            self.config.set("token_info", "access_token", token_info["access_token"])
-            self.config.set("token_info", "token_type", token_info["token_type"])
-            self.config.set("token_info", "expires_in", str(token_info["expires_in"]))
-            self.config.set("token_info", "scope", token_info["scope"])
-            expires_at = (datetime.datetime.now() + datetime.timedelta(seconds=token_info["expires_in"])).timestamp()
-            self.config.set("token_info", "expires_at", str(expires_at))
-            self.config.set("token_info", "refresh_token", token_info["refresh_token"])
-            self.config.set("token_info", "authorize?", "true")
-            with open(self.config_file, 'w') as config_file:
-                self.config.write(config_file)
-                # self.oauth_instance.
-            return token_info["access_token"]
+        CLIENT_KEY_B64: str = self.get_client_key_base64() # base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
+        headers: dict = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": "Basic {}".format(CLIENT_KEY_B64)
+        }
+        payload: dict = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": self.redirect_uri,
+        }
+        OAUTH_ACCESS_TOKEN_URL: str = self.OAUTH_ACCESS_TOKEN_URL
+        r = requests.post(OAUTH_ACCESS_TOKEN_URL, headers=headers, data=payload)
+        token_info = r.json()
+        print(f"Token Info: \n{token_info}")
+            # token_info = self.oauth_instance.get_access_token(code)
+        # except Exception as e:
+        #     raise e
+        
+        self.config.set("token_info", "access_token", token_info["access_token"])
+        self.config.set("token_info", "token_type", token_info["token_type"])
+        self.config.set("token_info", "expires_in", str(token_info["expires_in"]))
+        self.config.set("token_info", "scope", token_info["scope"])
+        expires_at = (datetime.datetime.now() + datetime.timedelta(seconds=token_info["expires_in"])).timestamp()
+        self.config.set("token_info", "expires_at", str(expires_at))
+        self.config.set("token_info", "refresh_token", token_info["refresh_token"])
+        self.config.set("token_info", "authorize?", "true")
+        with open(self.config_file, 'w') as config_file:
+            self.config.write(config_file)
+            # self.oauth_instance.
+        return token_info["access_token"]
 
     # def extend
     def refresh_access_token(self) -> dict:
@@ -162,6 +164,7 @@ class Authenticator():
         self.config.set("token_info", "access_token", token_info["access_token"])
         with open(self.config_file, 'w') as config_file:
                 self.config.write(config_file)
+
         return token_info
     
     def is_token_near_expires_in_15_min(self):
@@ -169,87 +172,73 @@ class Authenticator():
         expire_timestamp = datetime.datetime.fromtimestamp(float(_expire_timestamp))
         target_time = expire_timestamp - datetime.timedelta(minutes=15)
         return  target_time < datetime.datetime.now()
+        
+
+    def get_current_user(self):
+        access_token = self.get_access_token()
+        headers: dict = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        try: 
+            r = requests.get(f"{self.API_v1_URL}/me", headers=headers, timeout=10)
+            print(r)
+            response = r.json()
+
+        except Exception as error:
+            raise error
+
+        return {
+            "status": 200,
+            "response": response
+        }
+
+    def get_recently_listened(self):
         pass
-    
-    def is_token_expires(self):
+
+    def get_currently_listening(self) -> Dict:
+        access_token = self.get_access_token()
+        headers: dict = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        try:
+            API_URL = f"{self.API_v1_URL}/me/player/currently-playing"
+            # params = 
+            response = requests.get(API_URL, headers=headers, timeout=10)
+            # print(response.status_code)
+            # print(type(response))
+            # response = response.json()
+        except Exception as error:
+            raise error
+        
+        if (response.status_code == 204):
+            return {
+                "status": 204,
+                "msg": "No content being played or recently played",
+                "response": None
+            }
+        return {
+            "status": 200,
+            "response": response.json()
+        }
+
+
+    def get_top_tracks(self):
         pass
-    
 
+    def get_top_artists(self):
+        pass
 
-        
-        # try:
-        #     _oauth_instance = SpotifyOAuth(
-        #         client_id=self.client_id,
-        #         client_secret=self.client_secret,
-        #         redirect_uri=self.redirect_uri,
-        #         scope=self.scope
-        #     )
-        #     self.oauth_instance = _oauth_instance
-        #     self.spotify_instance = spotipy.Spotify(auth_manager=_oauth_instance)
+    def get_artist(self):
+        pass
 
-        # except Exception as e:
-            # print(e)
-        
-            
-        # spotify_instance = spotipy.Spotify(auth_manager=oauth_instance)
-    
+    def get_album(self):
+        pass
 
-    # def get_access_token() -> tuple[str, bool]:
-    #     token, is_token_valid = get_token_info()
-    #     if is_token_valid:
-    #         return token["access_token"], is_token_valid
-    #     else:
-    #         return "", is_token_valid
-        
-    # def refresh_access_token(): 
-    #     return sp_oauth.refresh_access_token(refresh_token)
+    def get_track(self):
+        pass
 
-    # def get_expires_at() -> tuple[int, bool]:
-    #     token, is_token_valid = get_token_info()
-    #     if is_token_valid:
-    #         return token["expires_at"], is_token_valid
-    #     else:
-    #         return "", is_token_valid
+    def get_genre_of_an_album(self):
+        pass
 
-    # def get_token_info() -> tuple[dict, bool]:
-    #     sp_oauth = SpotifyOAuth(
-    #         client_id=CLIENT_ID,
-    #         client_secret=CLIENT_SECRET,
-    #         redirect_uri=REDIRECT_URI,
-    #         scope=SCOPE
-    #     )
-    #     # create_spotify_oauth()
-    #     token_info = {}
-    #     is_token_valid = False
-    #     # If token is not cached, return false
-    #     if not (config.has_section("token_info")):
-    #         is_token_valid = False
-    #         return token_info, is_token_valid
-        
-    #     # Check if the token has expired
-    #     now = int(time.time())
-    #     is_token_expired = int(config.get("token_info", "expires_at")) - now < 60
-
-    #     if (is_token_expired):
-    #         print("token is expired")
-    #         refresh_token = config.get("token_info", "refresh_token")
-    #         token_info = sp_oauth.refresh_access_token(refresh_token)
-    #         config.set("token_info", "access_token", token_info["access_token"])
-    #         config.set("token_info", "token_type", token_info["token_type"])
-    #         config.set("token_info", "expires_in", str(token_info["expires_in"]))
-    #         config.set("token_info", "scope", token_info["scope"])
-    #         config.set("token_info", "expires_at", str(token_info["expires_at"]))
-    #         config.set("token_info", "refresh_token", token_info["refresh_token"])
-
-
-    #     output = {
-    #         "access_token": config.get("token_info", "access_token"),
-    #         "token_type": config.get("token_info", "token_type"),
-    #         "expires_in": config.get("token_info", "expires_in"),
-    #         "expires_at": config.get("token_info", "expires_at"),
-    #         "refresh_token": config.get("token_info", "refresh_token"),
-    #         "scope": config.get("token_info", "scope"),
-    #     }
-    #     is_token_valid = True
-    #     return output, is_token_valid
-
+    def get_genre_of_an_artist(self):
+        pass
